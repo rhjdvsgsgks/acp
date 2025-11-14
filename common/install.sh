@@ -144,6 +144,7 @@ if $PATCH; then
               sed -i "/^ *raw {/,/}/ s|flags .*|flags AUDIO_OUTPUT_FLAG_PRIMARY|" $FILE
               sed -i "/^ *primary {/,/}/ s/|AUDIO_OUTPUT_FLAG_DEEP_BUFFER//g" $FILE;;
     esac
+    rm_if_same $ORIGDIR$OFILE $FILE
   done
 elif $REMV; then
   ui_print "   Using remove logic"
@@ -153,12 +154,15 @@ elif $REMV; then
       for BUFFER in "Earpiece" "Speaker" "Wired Headset" "Wired Headphones" "Line" "HDMI" "Proxy" "FM" "BT SCO All" "USB Device Out" "Telephony Tx" "voice_rx" "primary input" "surround_sound" "record_24" "BT A2DP Out" "BT A2DP Headphones" "BT A2DP Speaker"; do
         sed -i "/$BUFFER/ s/$FLAG,//g" $MODPATH/system/etc/audio_policy_configuration.xml
       done
+      rm_if_same $ORIGDIR/system/etc/audio_policy_configuration.xml $MODPATH/system/etc/audio_policy_configuration.xml
     elif [ ! -f $ORIGDIR/vendor/etc/audio_output_policy.conf ] && [ -f $ORIGDIR/system/etc/audio_policy_configuration.xml ]; then
       [ -f $MODPATH/system/etc/audio_policy_configuration.xml ] || cp_ch $ORIGDIR/system/etc/audio_policy_configuration.xml $MODPATH/system/etc/audio_policy_configuration.xml
       sed -ri "s/$FLAG,|,$FLAG//g" $MODPATH/system/etc/audio_policy_configuration.xml
+      rm_if_same $ORIGDIR/system/etc/audio_policy_configuration.xml $MODPATH/system/etc/audio_policy_configuration.xml
     elif [ -f $ORIGDIR/vendor/etc/audio/audio_policy_configuration.xml ]; then
       [ -f $MODPATH/system/vendor/etc/audio/audio_policy_configuration.xml ] || cp_ch $ORIGDIR/vendor/etc/audio/audio_policy_configuration.xml $MODPATH/system/vendor/etc/audio/audio_policy_configuration.xml
       sed -ri "s/$FLAG,|,$FLAG//g" $MODPATH/system/vendor/etc/audio/audio_policy_configuration.xml
+      rm_if_same $ORIGDIR/vendor/etc/audio/audio_policy_configuration.xml $MODPATH/system/vendor/etc/audio/audio_policy_configuration.xml
     else
       for OFILE in ${POLS}; do
         FILE="$MODPATH$(echo $OFILE | sed "s|^/vendor|/system/vendor|g")"
@@ -167,6 +171,7 @@ elif $REMV; then
           *.conf) sed -i "/$FLAG {/,/}/d" $FILE;;
           *.xml) sed -ri "s/$FLAG,|,$FLAG//g" $FILE;;
         esac
+        rm_if_same $ORIGDIR$OFILE $FILE
       done
     fi
   done
@@ -179,6 +184,7 @@ if $NOTIF; then
     FILE="$MODPATH$(echo $OFILE | sed "s|^/vendor|/system/vendor|g")"
     cp_ch $ORIGDIR$OFILE $FILE
     osp_detect_notification $FILE
+    rm_if_same $ORIGDIR$OFILE $FILE
   done
 fi
 
@@ -211,6 +217,7 @@ if $USB; then
       grep -iE "tagName=\"usb[ _]+.* out\"" $FILE | sed -r "s/.*ame=\"([A-Za-z_ ]*)\".*/\1/" | while read i; do
         patch_xml $FILE "/module/devicePorts/devicePort[@tagName=\"$i\"]/profile[@name=\"\"]"
       done
+      rm_if_same $ORIGDIR$OFILE $FILE
     done
   else
     for OFILE in ${APS}; do
@@ -218,6 +225,7 @@ if $USB; then
       cp_ch $ORIGDIR$OFILE $FILE
       SPACES=$(sed -n "/^ *usb {/p" $FILE | sed -r "s/^( *).*/\1/")
       sed -i "/^$SPACES\usb {/,/^$SPACES}/ s/\(^ *\)sampling_rates .*/\1sampling_rates 48000/g" $FILE
+      rm_if_same $ORIGDIR$OFILE $FILE
     done
   fi
 fi

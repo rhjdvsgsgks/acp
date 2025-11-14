@@ -57,7 +57,7 @@ device_check() {
 }
 
 cp_ch() {
-  local opt=`getopt -o nr -- "$@"` BAK=true UBAK=true FOL=false
+  local opt=`getopt -o nr -- "$@"` BAK=true UBAK=true FOL=false OFILE
   eval set -- "$opt"
   while true; do
     case "$1" in
@@ -91,6 +91,10 @@ cp_ch() {
     fi
     install -D -m $PERM "$OFILE" "$FILE"
   done
+}
+
+rm_if_same() {
+  cmp -s "$1" "$2" && rm "$2"
 }
 
 install_script() {
